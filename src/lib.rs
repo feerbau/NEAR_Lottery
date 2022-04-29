@@ -82,8 +82,10 @@ impl Lottery {
     
     pub fn get_winner(&self) -> AccountId {
         assert!(get_timestamp() > self.end_date.try_into().unwrap(), "Not finished");
-        get_random_index(self.participants.len());
-        return "QUEONDA".to_string();
+        let index = get_random_index(self.participants.len());
+        let winner = &self.participants.to_vec()[index as usize];
+        println!("The winner is {}", winner);
+        return winner.to_string();
     }
 }
 
@@ -131,12 +133,15 @@ mod tests{
         let context = get_context();
         testing_env!(context);
         let lottery_name = "Test".to_string();
-        let end_date = 1651249778;
-        let contract = Lottery::new(lottery_name.clone(), end_date);
+        let end_date = 1651256235;
+        let mut contract = Lottery::new(lottery_name.clone(), end_date);
         assert_eq!(contract.get_lottery_name(), lottery_name);
         assert_eq!(contract.get_end_date(), end_date);
         assert_eq!(contract.get_num_participans(), 0);
-        contract.enter("botellita.com".to_string().clone());
-        assert_eq!(contract.get_winner(), "QUEONDA".to_string());
+        contract.enter("botellita.com".to_string());
+        assert_eq!(contract.get_num_participans(), 1);
+        contract.enter("botellon.near".to_string());
+        assert_ne!(contract.get_num_participans(), 1);
+        assert_ne!(contract.get_winner(), "QUEONDA".to_string());
     }
 }
