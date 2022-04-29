@@ -36,6 +36,10 @@ fn get_timestamp() -> i64 {
 }
 
 fn get_random_index(number: u64) -> i64{
+
+    let rand: u8 = *env::random_seed().get(0).unwrap();
+    println!(" el rand {} ",  rand);
+
     let step = Uniform::new(0, number as i64);
     let mut rng = rand::thread_rng();
     let choice = step.sample(&mut rng);
