@@ -33,7 +33,7 @@ fn get_timestamp() -> i64 {
 }
 
 fn get_random_index(number: u64) -> i64{
-    let timestamp = get_timestamp();
+    let timestamp = env::block_timestamp();
     let num = timestamp as u64 % number;
     return num as i64;
 }
@@ -76,7 +76,7 @@ impl Lottery {
     }
     
     pub fn get_winner(&self) -> AccountId {
-        assert!(get_timestamp() > self.end_date.try_into().unwrap(), "Not finished");
+        assert!(env::block_timestamp() > self.end_date.try_into().unwrap(), "Not finished");
         let index = get_random_index(self.participants.len());
         let winner = &self.participants.to_vec()[index as usize];
         println!("The winner is {}", winner);
