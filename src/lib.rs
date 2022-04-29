@@ -1,9 +1,9 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::{env, near_bindgen, Promise, PromiseOrValue, PanicOnDefault};
 use near_sdk::collections::UnorderedSet;
-use near_sdk::Duration;
-
-use std::time::{SystemTime, UNIX_EPOCH};
+use rand::distributions::{Distribution, Uniform};
+extern crate chrono;
+use chrono::{DateTime, NaiveDateTime, Utc}; 
 
 pub type AccountId = String;
 
@@ -14,7 +14,7 @@ pub struct Lottery {
     /// Lottery name
     pub lottery_name: String,
     /// End date of the lottery
-    pub end_date: Duration,
+    pub end_date: u64,
     /// Participants
     pub participants: UnorderedSet<AccountId>,
 }
@@ -28,18 +28,25 @@ fn assert_self() {
     );
 }
 
-fn assert_end(){
-    let start = SystemTime::now();
-    let since_the_epoch = start
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    println!("{:?}", since_the_epoch);
+fn get_timestamp() -> i64 {
+    let dt = Utc::now();
+    let timestamp: i64 = dt.timestamp();
+    println!("DT: {}", timestamp);
+    return timestamp;
+}
+
+fn get_random_index(number: u64) -> i64{
+    let step = Uniform::new(0, number as i64);
+    let mut rng = rand::thread_rng();
+    let choice = step.sample(&mut rng);
+    println!("Integer: {}", choice);
+    return choice;
 }
 
 #[near_bindgen]
 impl Lottery {
     #[init]
-    pub fn new(lottery_name: String, end_date: Duration) -> Self {
+    pub fn new(lottery_name: String, end_date: u64) -> Self {
         assert!(env::state_read::<Self>().is_none(), "Already initialized");
         Self {
             lottery_name,
@@ -65,7 +72,7 @@ impl Lottery {
         return self.participants.len();
     }
 
-    pub fn get_end_date(&self) -> Duration {
+    pub fn get_end_date(&self) -> u64 {
         return self.end_date;
     }
 
@@ -73,9 +80,11 @@ impl Lottery {
         return self.lottery_name.clone();
     }
     
-    // pub fn get_winner(&mut self) -> AccountId {
-    //     assert!(assert_end(self.end_date), "Not finished");
-    // }
+    pub fn get_winner(&self) -> AccountId {
+        assert!(get_timestamp() > self.end_date.try_into().unwrap(), "Not finished");
+        get_random_index(self.participants.len());
+        return "QUEONDA".to_string();
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -127,5 +136,7 @@ mod tests{
         assert_eq!(contract.get_lottery_name(), lottery_name);
         assert_eq!(contract.get_end_date(), end_date);
         assert_eq!(contract.get_num_participans(), 0);
+        contract.enter("botellita.com".to_string().clone());
+        assert_eq!(contract.get_winner(), "QUEONDA".to_string());
     }
 }
