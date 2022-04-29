@@ -1,10 +1,8 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::{env, near_bindgen, Promise, PromiseOrValue, PanicOnDefault};
 use near_sdk::collections::UnorderedSet;
-use rand::distributions::{Distribution, Uniform};
 extern crate chrono;
 use chrono::{DateTime, NaiveDateTime, Utc}; 
-
 pub type AccountId = String;
 
 
@@ -31,20 +29,13 @@ fn assert_self() {
 fn get_timestamp() -> i64 {
     let dt = Utc::now();
     let timestamp: i64 = dt.timestamp();
-    println!("DT: {}", timestamp);
     return timestamp;
 }
 
 fn get_random_index(number: u64) -> i64{
-
-    let rand: u8 = *env::random_seed().get(0).unwrap();
-    println!(" el rand {} ",  rand);
-
-    let step = Uniform::new(0, number as i64);
-    let mut rng = rand::thread_rng();
-    let choice = step.sample(&mut rng);
-    println!("Integer: {}", choice);
-    return choice;
+    let timestamp = get_timestamp();
+    let num = timestamp as u64 % number;
+    return num as i64;
 }
 
 #[near_bindgen]
@@ -144,12 +135,14 @@ mod tests{
         assert_eq!(contract.get_num_participans(), 0);
         contract.enter("botellita.com".to_string());
         assert_eq!(contract.get_num_participans(), 1);
-        contract.enter("botellon.near".to_string());
+        for n in 1..101{
+            let t = format!("wallet{}",n);
+            contract.enter(t.to_string());
+        }
         assert_ne!(contract.get_num_participans(), 1);
         assert_ne!(contract.get_winner(), "QUEONDA".to_string());
     }
 }
-
 
 use std::thread;
 use std::sync::mpsc;
